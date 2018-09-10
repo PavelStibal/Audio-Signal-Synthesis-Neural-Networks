@@ -46,7 +46,7 @@ def get_module(module_path):
     Returns:
       module: Imported module.
     """
-    import_path = "magenta.models.nsynth."
+    import_path = "magenta.models.preprocesor_autoencoder."
     module = importlib.import_module(import_path + module_path)
     return module
 

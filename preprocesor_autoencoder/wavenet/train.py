@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer("ps_tasks", 0,
 tf.app.flags.DEFINE_integer("total_batch_size", 1,
                             "Batch size spread across all sync replicas."
                             "We use a size of 32.")
-tf.app.flags.DEFINE_string("logdir", "/tmp/nsynth",
+tf.app.flags.DEFINE_string("logdir", "/tmp/preprocesor_autoencoder",
                            "The log directory for this experiment.")
 tf.app.flags.DEFINE_string("train_path", "", "The path to the train tfrecord.")
 tf.app.flags.DEFINE_string("log", "INFO",
