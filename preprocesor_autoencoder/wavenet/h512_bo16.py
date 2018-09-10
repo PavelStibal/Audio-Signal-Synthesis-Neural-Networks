@@ -20,9 +20,9 @@ from __future__ import print_function
 # internal imports
 from six.moves import range  # pylint: disable=redefined-builtin
 import tensorflow as tf
-from magenta.models.nsynth import reader
-from magenta.models.nsynth import utils
-from magenta.models.nsynth.wavenet import masked
+from synthesizer import reader
+from synthesizer import utils
+from synthesizer.wavenet import masked
 
 
 class FastGenerationConfig(object):

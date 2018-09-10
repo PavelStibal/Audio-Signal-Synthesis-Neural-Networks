@@ -24,7 +24,7 @@ set to 1. For training in 200k iterations, they both should be 32.
 # internal imports
 import tensorflow as tf
 
-from magenta.models.nsynth import utils
+from synthesizer import utils
 
 slim = tf.contrib.slim
 FLAGS = tf.app.flags.FLAGS
@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer("ps_tasks", 0,
 tf.app.flags.DEFINE_integer("total_batch_size", 1,
                             "Batch size spread across all sync replicas."
                             "We use a size of 32.")
-tf.app.flags.DEFINE_string("logdir", "/tmp/preprocesor_autoencoder",
+tf.app.flags.DEFINE_string("logdir", "/tmp/nsynth",
                            "The log directory for this experiment.")
 tf.app.flags.DEFINE_string("train_path", "", "The path to the train tfrecord.")
 tf.app.flags.DEFINE_string("log", "INFO",

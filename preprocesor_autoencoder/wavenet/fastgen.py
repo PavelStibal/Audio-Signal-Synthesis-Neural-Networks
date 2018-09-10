@@ -24,9 +24,9 @@ import numpy as np
 from scipy.io import wavfile
 import tensorflow as tf
 
-from magenta.models.nsynth import utils
-from magenta.models.nsynth.wavenet.h512_bo16 import Config
-from magenta.models.nsynth.wavenet.h512_bo16 import FastGenerationConfig
+from synthesizer import utils
+from synthesizer.wavenet.h512_bo16 import Config
+from synthesizer.wavenet.h512_bo16 import FastGenerationConfig
 
 
 def sample_categorical(pmf):
@@ -83,7 +83,7 @@ def load_fastgen_nsynth(batch_size=1):
     return graph
 
 
-def encode(wav_data, checkpoint_path, sample_length=64000):
+def encode(wav_data, checkpoint_path, sample_length):
     """Generate an array of embeddings from an array of audio.
 
     Args:
@@ -113,52 +113,40 @@ def encode(wav_data, checkpoint_path, sample_length=64000):
     return encodings
 
 
-def load_batch(files, sample_length=64000):
-    """Load a batch of data from either .wav or .npy files.
+# def load_batch(source_path, files, sample_length=64000):
+def load_batch(datas):
+    """Load a batch of data from either .wav.
 
     Args:
-      files: A list of filepaths to .wav or .npy files
-      sample_length: Maximum sample length
+      data: batch of data from .wav
 
     Returns:
       batch_data: A padded array of audio or embeddings [batch, length, (dims)]
     """
-    batch_data = []
     max_length = 0
-    is_npy = (os.path.splitext(files[0])[1] == ".npy")
     # Load the data
-    for f in files:
-        if is_npy:
-            data = np.load(f)
-            batch_data.append(data)
-        else:
-            data = utils.load_audio(f, sample_length, sr=16000)
-            batch_data.append(data)
-        if data.shape[0] > max_length:
-            max_length = data.shape[0]
-    # Add padding
-    for i, data in enumerate(batch_data):
+    for d in datas:
+        if d.shape[0] > max_length:
+            max_length = d.shape[0]
+
+    for i, data in enumerate(datas):
         if data.shape[0] < max_length:
-            if is_npy:
-                padded = np.zeros([max_length, +data.shape[1]])
-                padded[:data.shape[0], :] = data
-            else:
-                padded = np.zeros([max_length])
-                padded[:data.shape[0]] = data
-            batch_data[i] = padded
-    # Return arrays
-    batch_data = np.vstack(batch_data)
-    return batch_data
+            padded = np.zeros([max_length])
+            padded[:data.shape[0]] = data
+            datas[i] = padded
+
+    return np.vstack(datas)
 
 
-def save_batch(batch_audio, batch_save_paths):
+def save_batch(batch_audio, batch_save_paths, sample_rate):
     for audio, name in zip(batch_audio, batch_save_paths):
-        tf.logging.info("Saving: %s" % name)
-        wavfile.write(name, 16000, audio)
+        tf.logging.info("Saving: %s" % batch_save_paths)
+        wavfile.write(batch_save_paths, sample_rate, audio)
 
 
 def synthesize(encodings,
                save_paths,
+               sample_rate,
                checkpoint_path="model.ckpt-200000",
                samples_per_save=1000):
     """Synthesize audio from an array of embeddings.
@@ -166,6 +154,7 @@ def synthesize(encodings,
     Args:
       encodings: Numpy array with shape [batch_size, time, dim].
       save_paths: Iterable of output file names.
+      sample_rate: sample rate of original audio file
       checkpoint_path: Location of the pretrained model. [model.ckpt-200000]
       samples_per_save: Save files after every amount of generated samples.
     """
@@ -207,5 +196,5 @@ def synthesize(encodings,
             if sample_i % 100 == 0:
                 tf.logging.info("Sample: %d" % sample_i)
             if sample_i % samples_per_save == 0:
-                save_batch(audio_batch, save_paths)
-    save_batch(audio_batch, save_paths)
+                save_batch(audio_batch, save_paths, sample_rate)
+    save_batch(audio_batch, save_paths, sample_rate)
