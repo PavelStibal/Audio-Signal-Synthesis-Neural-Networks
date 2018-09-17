@@ -245,7 +245,7 @@ def main():
         sample2 = np.argmax(prediction)
         sample = (sample1 + sample2) / 2
         # iter = iter + 1
-        waveform.append(sample1 + sample2) # append random sample to waveform
+        waveform.append(sample) # append random sample to waveform
 
         # Show progress only once per second.
         current_sample_timestamp = datetime.now()
