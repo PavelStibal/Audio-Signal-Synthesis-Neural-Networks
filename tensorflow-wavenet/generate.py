@@ -237,6 +237,8 @@ def main():
                     err_msg='Prediction scaling at temperature=1.0 '
                             'is not working as intended.')
 
+        scaled_prediction = scaled_prediction * scaled_prediction
+        scaled_prediction = scaled_prediction / np.sum(scaled_prediction)
         sample = np.random.choice(
             np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         waveform.append(sample) # append random sample to waveform
