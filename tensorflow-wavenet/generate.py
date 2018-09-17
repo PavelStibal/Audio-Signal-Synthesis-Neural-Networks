@@ -157,10 +157,10 @@ def main():
 
     samples = tf.placeholder(tf.int32)
 
-    # if args.fast_generation:
-    #     next_sample = net.predict_proba_incremental(samples, args.gc_id)
-    # else:
-    next_sample = net.predict_proba(samples, args.gc_id)
+    if args.fast_generation:
+        next_sample = net.predict_proba_incremental(samples, args.gc_id)
+    else:
+        next_sample = net.predict_proba(samples, args.gc_id)
 
     if args.fast_generation:
         sess.run(tf.global_variables_initializer())
