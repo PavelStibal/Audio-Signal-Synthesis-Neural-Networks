@@ -219,7 +219,7 @@ def main():
             outputs = [next_sample]
 
         # Run the WaveNet to predict the next sample.
-        prediction = sess.run(outputs, feed_dict={samples: window})[0]
+        prediction = sess.run(outputs, feed_dict={samples: window})[0] # probability with which the value in range 0.255 is taken
 
         # Scale prediction distribution using temperature.
         np.seterr(divide='ignore')
