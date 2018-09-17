@@ -651,7 +651,7 @@ class WaveNetModel(object):
                 tf.nn.softmax_cross_entropy_with_logits(
                     labels=labels,
                     logits=local_inputs),
-                raw_output)
+                tf.float32)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
