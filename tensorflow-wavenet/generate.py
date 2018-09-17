@@ -243,9 +243,9 @@ def main():
         # sample = int(float(iter) / 15999.0 * 255.0)
         # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         sample2 = np.argmax(prediction)
-        sample = (sample1 + sample2)/2
+        sample = (sample1 + sample2) / 2
         # iter = iter + 1
-        waveform.append(sample) # append random sample to waveform
+        waveform.append(sample1 + sample2) # append random sample to waveform
 
         # Show progress only once per second.
         current_sample_timestamp = datetime.now()
