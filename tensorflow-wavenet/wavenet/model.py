@@ -50,7 +50,7 @@ class WaveNetModel(object):
                  residual_channels,
                  dilation_channels,
                  skip_channels,
-                 quantization_channels=2 ** 8,
+                 quantization_channels=2**8,
                  use_biases=False,
                  scalar_input=False,
                  initial_filter_width=32,
@@ -461,12 +461,13 @@ class WaveNetModel(object):
         push_ops.append(push)
 
         current_layer = self._generator_causal_layer(
-            current_layer, current_state)
+                            current_layer, current_state)
 
         # Add all defined dilation layers.
         with tf.name_scope('dilated_stack'):
             for layer_index, dilation in enumerate(self.dilations):
                 with tf.name_scope('layer{}'.format(layer_index)):
+
                     q = tf.FIFOQueue(
                         dilation,
                         dtypes=tf.float32,
@@ -534,32 +535,32 @@ class WaveNetModel(object):
                experimental.
         :return: Embedding or None
         '''
-        embedding = None
-        if self.global_condition_cardinality is not None:
-            # Only lookup the embedding if the global condition is presented
-            # as an integer of mutually-exclusive categories ...
-            embedding_table = self.variables['embeddings']['gc_embedding']
-            embedding = tf.nn.embedding_lookup(embedding_table,
-                                               global_condition)
-        elif global_condition is not None:
-            # ... else the global_condition (if any) is already provided
-            # as an embedding.
-
-            # In this case, the number of global_embedding channels must be
-            # equal to the the last dimension of the global_condition tensor.
-            gc_batch_rank = len(global_condition.get_shape())
-            dims_match = (global_condition.get_shape()[gc_batch_rank - 1] ==
-                          self.global_condition_channels)
-            if not dims_match:
-                raise ValueError('Shape of global_condition {} does not'
-                                 ' match global_condition_channels {}.'.
-                                 format(global_condition.get_shape(),
-                                        self.global_condition_channels))
-            embedding = global_condition
-
-        if embedding is not None:
-            embedding = tf.reshape(
-                embedding,
+        # embedding = None
+        # if self.global_condition_cardinality is not None:
+        #     # Only lookup the embedding if the global condition is presented
+        #     # as an integer of mutually-exclusive categories ...
+        #     embedding_table = self.variables['embeddings']['gc_embedding']
+        #     embedding = tf.nn.embedding_lookup(embedding_table,
+        #                                        global_condition)
+        # elif global_condition is not None:
+        #     # ... else the global_condition (if any) is already provided
+        #     # as an embedding.
+        #
+        #     # In this case, the number of global_embedding channels must be
+        #     # equal to the the last dimension of the global_condition tensor.
+        #     gc_batch_rank = len(global_condition.get_shape())
+        #     dims_match = (global_condition.get_shape()[gc_batch_rank - 1] ==
+        #                   self.global_condition_channels)
+        #     if not dims_match:
+        #         raise ValueError('Shape of global_condition {} does not'
+        #                          ' match global_condition_channels {}.'.
+        #                          format(global_condition.get_shape(),
+        #                                 self.global_condition_channels))
+        #     embedding = global_condition
+        #
+        # if embedding is not None:
+        embedding = tf.reshape(
+                # embedding,
                 [self.batch_size, 1, self.global_condition_channels])
 
         return embedding
@@ -577,7 +578,7 @@ class WaveNetModel(object):
                 encoded = self._one_hot(waveform)
 
             gc_embedding = self._embed_gc(global_condition)
-            raw_output = self._create_network(encoded, gc_embedding)
+            raw_output = self._create_network(encoded, gc_embedding) # vratit raw_out
             out = tf.reshape(raw_output, [-1, self.quantization_channels])
             # Cast to float64 to avoid bug in TensorFlow
             proba = tf.cast(
@@ -669,7 +670,7 @@ class WaveNetModel(object):
                     # L2 regularization for all trainable parameters
                     l2_loss = tf.add_n([tf.nn.l2_loss(v)
                                         for v in tf.trainable_variables()
-                                        if not ('bias' in v.name)])
+                                        if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
                     total_loss = (reduced_loss +
