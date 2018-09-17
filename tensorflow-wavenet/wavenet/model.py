@@ -647,7 +647,7 @@ class WaveNetModel(object):
             labels = tf.reshape(raw_output, [-1, 1])
             amp = 10
             freq = 11
-            local_inputs = tf.cast([raw_output, amp, freq], tf.float32)
+            local_inputs = tf.cast(raw_output + amp + freq, tf.float32)
             raw_output = tf.cast(
                 tf.nn.sampled_softmax_loss(
                     labels=labels,
