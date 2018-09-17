@@ -239,9 +239,7 @@ def main():
                     err_msg='Prediction scaling at temperature=1.0 '
                             'is not working as intended.')
 
-        # sample1 = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
-        sample1 = np.random.choice(len(scaled_prediction)) # take random sample from 0-255 given a prediction probability
-        sample1 = np.argmax(scaled_prediction) # take random sample from 0-255 given a prediction probability
+        sample1 = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         # sample = int(float(iter) / 15999.0 * 255.0)
         # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         sample2 = np.argmax(prediction)
