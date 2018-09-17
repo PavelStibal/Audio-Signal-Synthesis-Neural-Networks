@@ -17,12 +17,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow as tf
 # internal imports
 from six.moves import range  # pylint: disable=redefined-builtin
-import tensorflow as tf
-from synthesizer import reader
-from synthesizer import utils
-from synthesizer.wavenet import masked
+
+from preprocesor_autoencoder import reader
+from preprocesor_autoencoder import utils
+from preprocesor_autoencoder.wavenet import masked
 
 
 class FastGenerationConfig(object):

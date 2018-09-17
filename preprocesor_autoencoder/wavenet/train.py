@@ -24,7 +24,7 @@ set to 1. For training in 200k iterations, they both should be 32.
 # internal imports
 import tensorflow as tf
 
-from synthesizer import utils
+from preprocesor_autoencoder import utils
 
 slim = tf.contrib.slim
 FLAGS = tf.app.flags.FLAGS

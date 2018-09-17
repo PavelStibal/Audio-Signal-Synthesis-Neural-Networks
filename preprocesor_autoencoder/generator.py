@@ -1,11 +1,13 @@
 import os
-import tensorflow as tf
+
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 import soundfile
-from synthesizer import utils
-from synthesizer.wavenet import fastgen
+import tensorflow as tf
+
+from preprocesor_autoencoder import utils
+from preprocesor_autoencoder.wavenet import fastgen
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer("mode", 1, "Type of mode. 0 - load two audio files "

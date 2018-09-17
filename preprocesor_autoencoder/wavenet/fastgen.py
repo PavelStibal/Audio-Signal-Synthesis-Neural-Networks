@@ -19,14 +19,13 @@ Ramachandran, P., Le Paine, T., Khorrami, P., Babaeizadeh, M.,
 Chang, S., Zhang, Y., ... Huang, T. (2017).
 Fast Generation For Convolutional Autoregressive Models, 1-5.
 """
-import os
 import numpy as np
-from scipy.io import wavfile
 import tensorflow as tf
+from scipy.io import wavfile
 
-from synthesizer import utils
-from synthesizer.wavenet.h512_bo16 import Config
-from synthesizer.wavenet.h512_bo16 import FastGenerationConfig
+from preprocesor_autoencoder import utils
+from preprocesor_autoencoder.wavenet.h512_bo16 import Config
+from preprocesor_autoencoder.wavenet.h512_bo16 import FastGenerationConfig
 
 
 def sample_categorical(pmf):

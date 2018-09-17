@@ -18,7 +18,6 @@ from __future__ import division
 from __future__ import print_function
 
 # internal imports
-import numpy as np
 import tensorflow as tf
 
 # FFT Specgram Shapes
