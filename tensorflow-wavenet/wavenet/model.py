@@ -50,7 +50,7 @@ class WaveNetModel(object):
                  residual_channels,
                  dilation_channels,
                  skip_channels,
-                 quantization_channels=2 ** 8,
+                 quantization_channels=2**8,
                  use_biases=False,
                  scalar_input=False,
                  initial_filter_width=32,
@@ -461,12 +461,13 @@ class WaveNetModel(object):
         push_ops.append(push)
 
         current_layer = self._generator_causal_layer(
-            current_layer, current_state)
+                            current_layer, current_state)
 
         # Add all defined dilation layers.
         with tf.name_scope('dilated_stack'):
             for layer_index, dilation in enumerate(self.dilations):
                 with tf.name_scope('layer{}'.format(layer_index)):
+
                     q = tf.FIFOQueue(
                         dilation,
                         dtypes=tf.float32,
@@ -577,7 +578,7 @@ class WaveNetModel(object):
                 encoded = self._one_hot(waveform)
 
             gc_embedding = self._embed_gc(global_condition)
-            raw_output = self._create_network(encoded, gc_embedding)  # vratit raw_out
+            raw_output = self._create_network(encoded, gc_embedding) # vratit raw_out
             out = tf.reshape(raw_output, [-1, self.quantization_channels])
             # Cast to float64 to avoid bug in TensorFlow
             proba = tf.cast(
@@ -644,14 +645,17 @@ class WaveNetModel(object):
             raw_output = self._create_network(network_input, gc_embedding)
 
             labels = tf.reshape(raw_output, [-1, 1])
-            amp = 10
-            freq = 11
-            local_inputs = tf.cast(amp + freq, tf.float32)
-            raw_output = tf.cast(
+
+            local_inputs = tf.cast(inputs, tf.float32)
+            tf.cast(
                 tf.nn.sampled_softmax_loss(
+                    weights=local_w_t,
+                    biases=local_b,
                     labels=labels,
-                    inputs=local_inputs
-                ), tf.float32)
+                    inputs=local_inputs,
+                    num_sampled=num_samples,
+                    num_classes=self.target_vocab_size),
+                dtype)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
@@ -679,7 +683,7 @@ class WaveNetModel(object):
                     # L2 regularization for all trainable parameters
                     l2_loss = tf.add_n([tf.nn.l2_loss(v)
                                         for v in tf.trainable_variables()
-                                        if not ('bias' in v.name)])
+                                        if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
                     total_loss = (reduced_loss +
