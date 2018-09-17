@@ -645,7 +645,8 @@ class WaveNetModel(object):
             raw_output = self._create_network(network_input, gc_embedding)
 
             labels = tf.reshape(raw_output, [-1, 1])
-            inputs = tf.reshape(raw_output, [2, 5])
+            raw_output = raw_output + 10 + 15
+            inputs = tf.reshape(raw_output, [-1, 1])
             local_inputs = tf.cast(inputs, tf.float32)
             raw_output = tf.cast(
                 tf.nn.softmax(local_inputs, name='softmax'),
