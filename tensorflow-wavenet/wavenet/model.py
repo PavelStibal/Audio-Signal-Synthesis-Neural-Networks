@@ -646,12 +646,12 @@ class WaveNetModel(object):
             labels = tf.reshape(raw_output, [-1, 1])
             amp = 10
             freq = 11
-            local_inputs = tf.cast(raw_output + amp + freq, tf.float32)
+            local_inputs = tf.cast(amp + freq, tf.float32)
             raw_output = tf.cast(
                 tf.nn.sampled_softmax_loss(
                     labels=labels,
                     inputs=local_inputs,
-                ), dtype)
+                ), raw_output)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
