@@ -644,23 +644,14 @@ class WaveNetModel(object):
 
             raw_output = self._create_network(network_input, gc_embedding)
 
-            w_t = tf.get_variable("proj_w", [self.target_vocab_size, size], dtype=dtype)
-            w = tf.transpose(w_t)
-            b = tf.get_variable("proj_b", [self.target_vocab_size], dtype=dtype)
-            output_projection = (w, b)
-
             labels = tf.reshape(raw_output, [-1, 1])
-
+            inputs = [raw_output, 10, 11]
             local_inputs = tf.cast(inputs, tf.float32)
             tf.cast(
-                tf.nn.sampled_softmax_loss(
-                    weights=local_w_t,
-                    biases=local_b,
+                tf.nn.softmax_cross_entropy_with_logits(
                     labels=labels,
-                    inputs=local_inputs,
-                    num_sampled=num_samples,
-                    num_classes=self.target_vocab_size),
-                dtype)
+                    logits=local_inputs),
+                tf.float32)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
