@@ -185,7 +185,7 @@ def main():
         waveform = sess.run(seed).tolist()
     else:
         # Silence with a single random sample at the end.
-        waveform = [quantization_channels / 2] * (net.receptive_field - 1)
+        waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # Todo zmena rovne cary 5200
         waveform.append(np.random.randint(quantization_channels))
 
     if args.fast_generation and args.wav_seed:
