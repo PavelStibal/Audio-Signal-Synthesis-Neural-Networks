@@ -185,7 +185,7 @@ def main():
         waveform = sess.run(seed).tolist()
     else:
         # Silence with a single random sample at the end.
-        # waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # Todo zmena rovne cary 5200
+        # waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # rovna cara - 5200 samplu
         # waveform.append(np.random.randint(quantization_channels))
         waveform = [.5]
 
@@ -239,7 +239,7 @@ def main():
                     err_msg='Prediction scaling at temperature=1.0 '
                             'is not working as intended.')
 
-        # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
+        sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         # sample = int(float(iter) / 15999.0 * 255.0)
         # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         sample = np.argmax(prediction)
