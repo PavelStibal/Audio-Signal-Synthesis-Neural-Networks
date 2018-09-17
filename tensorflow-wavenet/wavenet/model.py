@@ -50,7 +50,7 @@ class WaveNetModel(object):
                  residual_channels,
                  dilation_channels,
                  skip_channels,
-                 quantization_channels=2 ** 8,
+                 quantization_channels=2**8,
                  use_biases=False,
                  scalar_input=False,
                  initial_filter_width=32,
@@ -461,12 +461,13 @@ class WaveNetModel(object):
         push_ops.append(push)
 
         current_layer = self._generator_causal_layer(
-            current_layer, current_state)
+                            current_layer, current_state)
 
         # Add all defined dilation layers.
         with tf.name_scope('dilated_stack'):
             for layer_index, dilation in enumerate(self.dilations):
                 with tf.name_scope('layer{}'.format(layer_index)):
+
                     q = tf.FIFOQueue(
                         dilation,
                         dtypes=tf.float32,
@@ -572,7 +573,7 @@ class WaveNetModel(object):
         with tf.name_scope(name):
             if self.scalar_input:
                 encoded = tf.cast(waveform, tf.float32)
-                encoded = tf.reshape(encoded, [-1, 1])
+                encoded = tf.reshape(encoded, [self.batch_size, -1, 1])
             else:
                 encoded = self._one_hot(waveform)
 
@@ -669,7 +670,7 @@ class WaveNetModel(object):
                     # L2 regularization for all trainable parameters
                     l2_loss = tf.add_n([tf.nn.l2_loss(v)
                                         for v in tf.trainable_variables()
-                                        if not ('bias' in v.name)])
+                                        if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
                     total_loss = (reduced_loss +
