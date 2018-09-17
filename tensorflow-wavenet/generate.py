@@ -240,7 +240,7 @@ def main():
 
         # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         # sample = int(float(iter) / 15999.0 * 255.0)
-        sample = np.sin(iter)
+        sample = int(np.sin(float(iter) / 15999.0 * np.pi * 2.0))
         iter = iter + 1
         waveform.append(sample) # append random sample to waveform
 
