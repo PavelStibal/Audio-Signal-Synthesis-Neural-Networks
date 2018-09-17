@@ -644,6 +644,11 @@ class WaveNetModel(object):
 
             raw_output = self._create_network(network_input, gc_embedding)
 
+            w_t = tf.get_variable("proj_w", [self.target_vocab_size, size], dtype=dtype)
+            w = tf.transpose(w_t)
+            b = tf.get_variable("proj_b", [self.target_vocab_size], dtype=dtype)
+            output_projection = (w, b)
+
             labels = tf.reshape(raw_output, [-1, 1])
 
             local_inputs = tf.cast(inputs, tf.float32)
