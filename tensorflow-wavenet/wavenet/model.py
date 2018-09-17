@@ -647,7 +647,7 @@ class WaveNetModel(object):
             labels = tf.reshape(raw_output, [-1, 1])
             inputs = [raw_output, 10, 11]
             local_inputs = tf.cast(inputs, tf.float32)
-            tf.cast(
+            raw_output = tf.cast(
                 tf.nn.softmax_cross_entropy_with_logits(
                     labels=labels,
                     logits=local_inputs),
