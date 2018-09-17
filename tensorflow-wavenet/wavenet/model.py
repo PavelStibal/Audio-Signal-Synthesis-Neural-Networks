@@ -535,32 +535,32 @@ class WaveNetModel(object):
                experimental.
         :return: Embedding or None
         '''
-        # embedding = None
-        # if self.global_condition_cardinality is not None:
-        #     # Only lookup the embedding if the global condition is presented
-        #     # as an integer of mutually-exclusive categories ...
-        #     embedding_table = self.variables['embeddings']['gc_embedding']
-        #     embedding = tf.nn.embedding_lookup(embedding_table,
-        #                                        global_condition)
-        # elif global_condition is not None:
-        #     # ... else the global_condition (if any) is already provided
-        #     # as an embedding.
-        #
-        #     # In this case, the number of global_embedding channels must be
-        #     # equal to the the last dimension of the global_condition tensor.
-        #     gc_batch_rank = len(global_condition.get_shape())
-        #     dims_match = (global_condition.get_shape()[gc_batch_rank - 1] ==
-        #                   self.global_condition_channels)
-        #     if not dims_match:
-        #         raise ValueError('Shape of global_condition {} does not'
-        #                          ' match global_condition_channels {}.'.
-        #                          format(global_condition.get_shape(),
-        #                                 self.global_condition_channels))
-        #     embedding = global_condition
-        #
-        # if embedding is not None:
-        embedding = tf.reshape(
-                # embedding,
+        embedding = None
+        if self.global_condition_cardinality is not None:
+            # Only lookup the embedding if the global condition is presented
+            # as an integer of mutually-exclusive categories ...
+            embedding_table = self.variables['embeddings']['gc_embedding']
+            embedding = tf.nn.embedding_lookup(embedding_table,
+                                               global_condition)
+        elif global_condition is not None:
+            # ... else the global_condition (if any) is already provided
+            # as an embedding.
+
+            # In this case, the number of global_embedding channels must be
+            # equal to the the last dimension of the global_condition tensor.
+            gc_batch_rank = len(global_condition.get_shape())
+            dims_match = (global_condition.get_shape()[gc_batch_rank - 1] ==
+                          self.global_condition_channels)
+            if not dims_match:
+                raise ValueError('Shape of global_condition {} does not'
+                                 ' match global_condition_channels {}.'.
+                                 format(global_condition.get_shape(),
+                                        self.global_condition_channels))
+            embedding = global_condition
+
+        if embedding is not None:
+            embedding = tf.reshape(
+                embedding,
                 [self.batch_size, 1, self.global_condition_channels])
 
         return embedding
