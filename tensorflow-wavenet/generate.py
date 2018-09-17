@@ -2,9 +2,9 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-from datetime import datetime
 import json
 import os
+from datetime import datetime
 
 import librosa
 import numpy as np
@@ -32,7 +32,7 @@ def get_arguments():
         """Ensure argument is a positive float."""
         if float(f) < 0:
             raise argparse.ArgumentTypeError(
-                'Argument must be greater than zero')
+                    'Argument must be greater than zero')
         return float(f)
 
     parser = argparse.ArgumentParser(description='WaveNet generation script')
@@ -53,7 +53,7 @@ def get_arguments():
         type=str,
         default=LOGDIR,
         help='Directory in which to store the logging '
-             'information for TensorBoard.')
+        'information for TensorBoard.')
     parser.add_argument(
         '--wavenet_params',
         type=str,
@@ -104,8 +104,8 @@ def get_arguments():
 
         if arguments.gc_id is None:
             raise ValueError("Globally conditioning, but global condition was "
-                             "not specified. Use --gc_id to specify global "
-                             "condition.")
+                              "not specified. Use --gc_id to specify global "
+                              "condition.")
 
     return arguments
 
@@ -233,13 +233,13 @@ def main():
         # scaling.
         if args.temperature == 1.0:
             np.testing.assert_allclose(
-                prediction, scaled_prediction, atol=1e-5,
-                err_msg='Prediction scaling at temperature=1.0 '
-                        'is not working as intended.')
+                    prediction, scaled_prediction, atol=1e-5,
+                    err_msg='Prediction scaling at temperature=1.0 '
+                            'is not working as intended.')
 
         sample = np.random.choice(
-            np.arange(quantization_channels), p=scaled_prediction)
-        waveform.append(sample)
+            np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
+        waveform.append(sample) # append random sample to waveform
 
         # Show progress only once per second.
         current_sample_timestamp = datetime.now()
