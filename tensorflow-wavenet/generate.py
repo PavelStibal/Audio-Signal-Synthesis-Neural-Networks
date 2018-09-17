@@ -206,6 +206,7 @@ def main():
         print('Done.')
 
     last_sample_timestamp = datetime.now()
+    iter = 0
     for step in range(args.samples):
         if args.fast_generation:
             outputs = [next_sample]
@@ -238,7 +239,8 @@ def main():
                             'is not working as intended.')
 
         # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
-        sample = np.argmax(scaled_prediction)
+        sample = iter
+        iter = iter + 1
         waveform.append(sample) # append random sample to waveform
 
         # Show progress only once per second.
