@@ -157,10 +157,10 @@ def main():
 
     samples = tf.placeholder(tf.int32)
 
-    if args.fast_generation:
-        next_sample = net.predict_proba_incremental(samples, args.gc_id)
-    else:
-        next_sample = net.predict_proba(samples, args.gc_id)
+    # if args.fast_generation:
+    #     next_sample = net.predict_proba_incremental(samples, args.gc_id)
+    # else:
+    next_sample = net.predict_proba(samples, args.gc_id)
 
     if args.fast_generation:
         sess.run(tf.global_variables_initializer())
@@ -238,9 +238,9 @@ def main():
                     err_msg='Prediction scaling at temperature=1.0 '
                             'is not working as intended.')
 
-        # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
+        sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         # sample = int(float(iter) / 15999.0 * 255.0)
-        sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
+        # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         iter = iter + 1
         waveform.append(sample) # append random sample to waveform
 
