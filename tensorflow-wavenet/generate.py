@@ -142,7 +142,7 @@ def main():
     sess = tf.Session()
 
     net = WaveNetModel(
-        batch_size=2,
+        batch_size=1,
         dilations=wavenet_params['dilations'],
         filter_width=wavenet_params['filter_width'],
         residual_channels=wavenet_params['residual_channels'],
