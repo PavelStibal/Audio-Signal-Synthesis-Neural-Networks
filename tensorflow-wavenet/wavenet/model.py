@@ -578,7 +578,7 @@ class WaveNetModel(object):
                 encoded = self._one_hot(waveform)
 
             gc_embedding = self._embed_gc(global_condition)
-            raw_output = self._create_network(encoded, gc_embedding) # vratit raw_out
+            raw_output = self._create_network(encoded, gc_embedding)
             out = tf.reshape(raw_output, [-1, self.quantization_channels])
             # Cast to float64 to avoid bug in TensorFlow
             proba = tf.cast(
@@ -643,17 +643,6 @@ class WaveNetModel(object):
                                      [-1, network_input_width, -1])
 
             raw_output = self._create_network(network_input, gc_embedding)
-
-            # labels = tf.reshape(raw_output, [-1, 1])
-            # raw_output = raw_output + 10 + 15
-            # inputs = tf.reshape(raw_output, [-1, 1])
-            # local_inputs = tf.cast(inputs, tf.float32)
-            # raw_output = tf.cast(
-            #     tf.nn.softmax(local_inputs, name='softmax'),
-            #     # tf.nn.softmax_cross_entropy_with_logits(
-            #     #     labels=labels,
-            #     #     logits=local_inputs),
-            #     tf.float32)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
