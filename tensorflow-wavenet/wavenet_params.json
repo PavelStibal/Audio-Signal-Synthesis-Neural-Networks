@@ -7,6 +7,6 @@
     "quantization_channels": 512,
     "skip_channels": 512,
     "use_biases": true,
-    "scalar_input": false,
+    "scalar_input": true,
     "initial_filter_width": 32
 }
