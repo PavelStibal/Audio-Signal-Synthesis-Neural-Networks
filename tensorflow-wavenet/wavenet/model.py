@@ -651,7 +651,7 @@ class WaveNetModel(object):
                 tf.nn.sampled_softmax_loss(
                     labels=labels,
                     inputs=local_inputs,
-                ), raw_output)
+                ), tf.float32)
 
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
