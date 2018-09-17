@@ -8,11 +8,11 @@ http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html
 from __future__ import print_function
 
 import argparse
-from datetime import datetime
 import json
 import os
 import sys
 import time
+from datetime import datetime
 
 import tensorflow as tf
 from tensorflow.python.client import timeline
@@ -22,7 +22,7 @@ from wavenet import WaveNetModel, AudioReader, optimizer_factory
 BATCH_SIZE = 1
 DATA_DIRECTORY = './VCTK-Corpus'
 LOGDIR_ROOT = './logdir'
-CHECKPOINT_EVERY = 50
+CHECKPOINT_EVERY = 100
 NUM_STEPS = int(1e5)
 LEARNING_RATE = 1e-3
 WAVENET_PARAMS = './wavenet_params.json'
@@ -32,7 +32,7 @@ L2_REGULARIZATION_STRENGTH = 0
 SILENCE_THRESHOLD = 0.3
 EPSILON = 0.001
 MOMENTUM = 0.9
-MAX_TO_KEEP = 5
+MAX_TO_KEEP = 500
 METADATA = False
 
 
