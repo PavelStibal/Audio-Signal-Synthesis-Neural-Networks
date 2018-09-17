@@ -644,6 +644,17 @@ class WaveNetModel(object):
 
             raw_output = self._create_network(network_input, gc_embedding)
 
+            labels = tf.reshape(raw_output, [-1, 1])
+
+            local_inputs = tf.cast([raw_output, amp, freq], tf.float32)
+            tf.cast(
+                tf.nn.sampled_softmax_loss(
+                    labels=labels,
+                    inputs=local_inputs,
+                    num_sampled=num_samples,
+                    num_classes=self.target_vocab_size),
+                dtype)
+
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
                 # for the first predicted sample.
