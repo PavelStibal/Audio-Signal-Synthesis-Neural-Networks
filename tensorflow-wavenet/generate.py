@@ -239,7 +239,7 @@ def main():
                             'is not working as intended.')
 
         # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
-        sample = iter
+        sample = float(iter) / 15999.0 * 255.0
         iter = iter + 1
         waveform.append(sample) # append random sample to waveform
 
