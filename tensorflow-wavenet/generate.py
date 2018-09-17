@@ -32,7 +32,7 @@ def get_arguments():
         """Ensure argument is a positive float."""
         if float(f) < 0:
             raise argparse.ArgumentTypeError(
-                    'Argument must be greater than zero')
+                'Argument must be greater than zero')
         return float(f)
 
     parser = argparse.ArgumentParser(description='WaveNet generation script')
@@ -53,7 +53,7 @@ def get_arguments():
         type=str,
         default=LOGDIR,
         help='Directory in which to store the logging '
-        'information for TensorBoard.')
+             'information for TensorBoard.')
     parser.add_argument(
         '--wavenet_params',
         type=str,
@@ -104,8 +104,8 @@ def get_arguments():
 
         if arguments.gc_id is None:
             raise ValueError("Globally conditioning, but global condition was "
-                              "not specified. Use --gc_id to specify global "
-                              "condition.")
+                             "not specified. Use --gc_id to specify global "
+                             "condition.")
 
     return arguments
 
@@ -185,8 +185,9 @@ def main():
         waveform = sess.run(seed).tolist()
     else:
         # Silence with a single random sample at the end.
-        waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # Todo zmena rovne cary 5200
-        waveform.append(np.random.randint(quantization_channels))
+        # waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # Todo zmena rovne cary 5200
+        # waveform.append(np.random.randint(quantization_channels))
+        waveform = [.5]
 
     if args.fast_generation and args.wav_seed:
         # When using the incremental generation, we need to
@@ -220,7 +221,8 @@ def main():
             outputs = [next_sample]
 
         # Run the WaveNet to predict the next sample.
-        prediction = sess.run(outputs, feed_dict={samples: window})[0] # probability with which the value in range 0.255 is taken
+        prediction = sess.run(outputs, feed_dict={samples: window})[
+            0]  # probability with which the value in range 0.255 is taken
 
         # Scale prediction distribution using temperature.
         np.seterr(divide='ignore')
@@ -234,16 +236,16 @@ def main():
         # scaling.
         if args.temperature == 1.0:
             np.testing.assert_allclose(
-                    prediction, scaled_prediction, atol=1e-5,
-                    err_msg='Prediction scaling at temperature=1.0 '
-                            'is not working as intended.')
+                prediction, scaled_prediction, atol=1e-5,
+                err_msg='Prediction scaling at temperature=1.0 '
+                        'is not working as intended.')
 
         # sample = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
         # sample = int(float(iter) / 15999.0 * 255.0)
         # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         sample = np.argmax(prediction)
         iter = iter + 1
-        waveform.append(sample) # append random sample to waveform
+        waveform.append(sample)  # append random sample to waveform
 
         # Show progress only once per second.
         current_sample_timestamp = datetime.now()
