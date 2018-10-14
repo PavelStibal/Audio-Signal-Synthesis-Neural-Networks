@@ -1,10 +1,10 @@
 
-import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
+import tensorflow as tf
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
+
 mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
 # Training Parameters
@@ -21,7 +21,7 @@ num_hidden_2 = 128 # 2nd layer num features (the latent dim)
 num_input = 784 # MNIST data input (img shape: 28*28)
 
 # tf Graph input (only pictures)
-X = tf.placeholder("float", [None, num_input])
+x = tf.placeholder("float", [None, num_input])
 
 weights = {
     'encoder_h1': tf.Variable(tf.random_normal([num_input, num_hidden_1])),
@@ -37,44 +37,21 @@ biases = {
 }
 
 # Building the encoder
-def encoder(x):
-    # Encoder Hidden layer with sigmoid activation #1
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']),
-                                   biases['encoder_b1']))
-    # Encoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['encoder_h2']),
-                                   biases['encoder_b2']))
-    return layer_2
-
+layer_encoder1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']), biases['encoder_b1']))
+layer_encoder2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_encoder1, weights['encoder_h2']), biases['encoder_b2']))
 
 # Building the decoder
-def decoder(x):
-    # Decoder Hidden layer with sigmoid activation #1
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['decoder_h1']),
-                                   biases['decoder_b1']))
-    # Decoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['decoder_h2']),
-                                   biases['decoder_b2']))
-    return layer_2
+layer_decoder1 = tf.nn.sigmoid(tf.add(tf.matmul(layer_encoder2, weights['decoder_h1']), biases['decoder_b1']))
+layer_decoder2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_decoder1, weights['decoder_h2']), biases['decoder_b2']))
 
-# Construct model
-encoder_op = encoder(X)
-decoder_op = decoder(encoder_op)
-
-# Prediction
-y_pred = decoder_op
-# Targets (Labels) are the input data.
-y_true = X
-
-# Define loss and optimizer, minimize the squared error
-loss = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
+# Define loss and optimizer, minimize the squared error (input data - Prediction)
+loss = tf.reduce_mean(tf.pow(x - layer_decoder2, 2))
 optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
 
-# Initialize the variables (i.e. assign their default value)
+# Initialize the variables or default value
 init = tf.global_variables_initializer()
 
-# Start Training
-# Start a new TF session
+# Start Training and a new TF session
 with tf.Session() as sess:
 
     # Run the initializer
@@ -82,18 +59,16 @@ with tf.Session() as sess:
 
     # Training
     for i in range(1, num_steps+1):
-        # Prepare Data
-        # Get the next batch of MNIST data (only images are needed, not labels)
+        # Get the next batch of MNIST data (only images)
         batch_x, _ = mnist.train.next_batch(batch_size)
 
         # Run optimization op (backprop) and cost op (to get loss value)
-        _, l = sess.run([optimizer, loss], feed_dict={X: batch_x})
-        # Display logs per step
-        if i % display_step == 0 or i == 1:
-            print('Step %i: Minibatch Loss: %f' % (i, l))
+        _, l = sess.run([optimizer, loss], feed_dict={x: batch_x})
 
-    # Testing
-    # Encode and decode images from test set and visualize their reconstruction.
+        if i % display_step == 0 or i == 1:
+            print('Step %i: Loss: %.3f' % (i, l))
+
+    # Encode and decode images from set and visualize reconstruction.
     n = 4
     canvas_orig = np.empty((28 * n, 28 * n))
     canvas_recon = np.empty((28 * n, 28 * n))
@@ -101,18 +76,15 @@ with tf.Session() as sess:
         # MNIST test set
         batch_x, _ = mnist.test.next_batch(n)
         # Encode and decode the digit image
-        g = sess.run(decoder_op, feed_dict={X: batch_x})
+        g = sess.run(layer_decoder2, feed_dict={x: batch_x})
 
-        # Display original images
+        # Original images
         for j in range(n):
-            # Draw the original digits
-            canvas_orig[i * 28:(i + 1) * 28, j * 28:(j + 1) * 28] = \
-                batch_x[j].reshape([28, 28])
-        # Display reconstructed images
+            canvas_orig[i * 28:(i + 1) * 28, j * 28:(j + 1) * 28] = batch_x[j].reshape([28, 28])
+
+        # Reconstructed images
         for j in range(n):
-            # Draw the reconstructed digits
-            canvas_recon[i * 28:(i + 1) * 28, j * 28:(j + 1) * 28] = \
-                g[j].reshape([28, 28])
+            canvas_recon[i * 28:(i + 1) * 28, j * 28:(j + 1) * 28] = g[j].reshape([28, 28])
 
     print("Original Images")
     plt.figure(figsize=(n, n))
