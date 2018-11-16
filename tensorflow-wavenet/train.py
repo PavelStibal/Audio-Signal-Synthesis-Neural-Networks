@@ -36,6 +36,7 @@ MAX_TO_KEEP = 500
 METADATA = False
 
 
+
 def get_arguments():
     def _str_to_bool(s):
         """Convert string to bool (in argparse context)."""
@@ -253,6 +254,9 @@ def main():
     loss = net.loss(input_batch=audio_batch,
                     global_condition_batch=gc_id_batch,
                     l2_regularization_strength=args.l2_regularization_strength)
+    learning_rate_placeholder = tf.placeholder(tf.float32, [], name='learning_rate')
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate_placeholder)
+    train_op = optimizer.minimize(loss)
     optimizer = optimizer_factory[args.optimizer](
         learning_rate=args.learning_rate,
         momentum=args.momentum)
@@ -299,6 +303,8 @@ def main():
                 print('Storing metadata')
                 run_options = tf.RunOptions(
                     trace_level=tf.RunOptions.FULL_TRACE)
+                learning_rate = 1e-3 if step < 1000 else 1e-4
+                sess.run(train_op, feed_dict={learning_rate_placeholder: learning_rate})
                 summary, loss_value, _ = sess.run(
                     [summaries, loss, optim],
                     options=run_options,
