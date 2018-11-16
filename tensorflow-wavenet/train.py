@@ -27,14 +27,13 @@ NUM_STEPS = int(1e5)
 LEARNING_RATE = 1e-3
 WAVENET_PARAMS = './wavenet_params.json'
 STARTED_DATESTRING = "{0:%Y-%m-%dT%H-%M-%S}".format(datetime.now())
-SAMPLE_SIZE = 100000
+SAMPLE_SIZE = None
 L2_REGULARIZATION_STRENGTH = 0
-SILENCE_THRESHOLD = 0.3
+SILENCE_THRESHOLD = 0.1
 EPSILON = 0.001
 MOMENTUM = 0.9
 MAX_TO_KEEP = 500
 METADATA = False
-
 
 
 def get_arguments():
@@ -211,10 +210,6 @@ def main():
 
     # Load raw waveform from VCTK corpus.
     with tf.name_scope('create_inputs'):
-        # Allow silence trimming to be skipped by specifying a threshold near
-        # zero.
-        silence_threshold = args.silence_threshold if args.silence_threshold > \
-                                                      EPSILON else None
         gc_enabled = args.gc_channels is not None
         reader = AudioReader(
             args.data_dir,
@@ -226,7 +221,7 @@ def main():
                                                                    wavenet_params["scalar_input"],
                                                                    wavenet_params["initial_filter_width"]),
             sample_size=args.sample_size,
-            silence_threshold=silence_threshold)
+            silence_threshold=args.silence_threshold if args.silence_threshold > EPSILON else None)
         audio_batch = reader.dequeue(args.batch_size)
         if gc_enabled:
             gc_id_batch = reader.dequeue_gc(args.batch_size)
@@ -254,14 +249,14 @@ def main():
     loss = net.loss(input_batch=audio_batch,
                     global_condition_batch=gc_id_batch,
                     l2_regularization_strength=args.l2_regularization_strength)
-    learning_rate_placeholder = tf.placeholder(tf.float32, [], name='learning_rate')
-    optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate_placeholder)
+    learning_rate_placeholder = tf.placeholder(tf.float32, [])
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate_placeholder, momentum=args.momentum)
     train_op = optimizer.minimize(loss)
-    optimizer = optimizer_factory[args.optimizer](
-        learning_rate=args.learning_rate,
-        momentum=args.momentum)
-    trainable = tf.trainable_variables()
-    optim = optimizer.minimize(loss, var_list=trainable)
+    # optimizer = optimizer_factory[args.optimizer](
+    #                 learning_rate=args.learning_rate,
+    #                 momentum=args.momentum)
+    # trainable = tf.trainable_variables()
+    # optim = optimizer.minimize(loss, var_list=trainable)
 
     # Set up logging for TensorBoard.
     writer = tf.summary.FileWriter(logdir)
@@ -294,35 +289,49 @@ def main():
     reader.start_threads(sess)
 
     step = None
+    loss_value = None
+    update = 0
     last_saved_step = saved_global_step
+    learning_rate = args.learning_rate
+    print('learning_rate {:f})'.format(learning_rate))
     try:
         for step in range(saved_global_step + 1, args.num_steps):
             start_time = time.time()
+
             if args.store_metadata and step % 50 == 0:
                 # Slow run that stores extra information for debugging.
                 print('Storing metadata')
                 run_options = tf.RunOptions(
                     trace_level=tf.RunOptions.FULL_TRACE)
-                learning_rate = 1e-3 if step < 1000 else 1e-4
-                sess.run(train_op, feed_dict={learning_rate_placeholder: learning_rate})
                 summary, loss_value, _ = sess.run(
-                    [summaries, loss, optim],
+                    # [summaries, loss, optim],
+                    [summaries, loss, train_op],
+                    feed_dict={learning_rate_placeholder: learning_rate},
                     options=run_options,
                     run_metadata=run_metadata)
                 writer.add_summary(summary, step)
-                writer.add_run_metadata(run_metadata,
-                                        'step_{:04d}'.format(step))
+                writer.add_run_metadata(run_metadata, 'step_{:04d}'.format(step))
                 tl = timeline.Timeline(run_metadata.step_stats)
                 timeline_path = os.path.join(logdir, 'timeline.trace')
                 with open(timeline_path, 'w') as f:
                     f.write(tl.generate_chrome_trace_format(show_memory=True))
             else:
-                summary, loss_value, _ = sess.run([summaries, loss, optim])
+                summary, loss_value, _ = sess.run([summaries, loss, train_op],
+                                                  feed_dict={learning_rate_placeholder: learning_rate})
+                # summary, loss_value, _ = sess.run([summaries, loss, optim])
                 writer.add_summary(summary, step)
 
+            if 1.5 >= loss_value > 0.5 and update == 0:
+                learning_rate = learning_rate * 0.1
+                update += 1
+                print('learning_rate {:f})'.format(learning_rate))
+            elif loss_value <= 0.5 and update == 1:
+                learning_rate = learning_rate * 0.1
+                update += 1
+                print('learning_rate {:f})'.format(learning_rate))
+
             duration = time.time() - start_time
-            print('step {:d} - loss = {:.3f}, ({:.3f} sec/step)'
-                  .format(step, loss_value, duration))
+            print('step {:d} - loss = {:.3f}, ({:.3f} sec/step)'.format(step, loss_value, duration))
 
             if step % args.checkpoint_every == 0:
                 save(saver, sess, logdir, step)
