@@ -7,7 +7,6 @@ import wave
 
 import librosa
 import numpy as np
-import soundfile
 import tensorflow as tf
 
 FILE_PATTERN = r'p([0-9]+)_([0-9]+)\.wav'
@@ -58,8 +57,8 @@ def load_generic_audio(directory, sample_rate):
         else:
             # The file name matches the pattern for containing ids.
             category_id = int(ids[0][0])
-        # audio, _ = librosa.load(filename, sr=sample_rate, mono=True)
-        audio, _ = soundfile.read(filename)  # data, samplerate
+        audio, _ = librosa.load(filename, sr=sample_rate, mono=True)  # data, samplerate
+        # audio, _ = soundfile.read(filename)  # other load wave sound
         wave_data = wave.open(filename, 'r')
         audio = audio.reshape(-1, 1)
         yield audio, filename, category_id, wave_data.getnframes()
