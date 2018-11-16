@@ -185,6 +185,11 @@ class AudioReader(object):
                 if self.sample_size:
                     # Cut samples into pieces of size receptive_field +
                     # sample_size with receptive_field overlap
+                    if self.sample_rate > len(audio):
+                        np.resize(audio, (1, self.sample_rate - 1))
+                    else:
+                        self.sample_rate = len(audio)
+
                     while len(audio) > self.receptive_field:
                         piece = audio[:(self.receptive_field +
                                         self.sample_size), :]
