@@ -3,9 +3,11 @@ import os
 import random
 import re
 import threading
+import wave
 
 import librosa
 import numpy as np
+import soundfile
 import tensorflow as tf
 
 FILE_PATTERN = r'p([0-9]+)_([0-9]+)\.wav'
@@ -56,9 +58,11 @@ def load_generic_audio(directory, sample_rate):
         else:
             # The file name matches the pattern for containing ids.
             category_id = int(ids[0][0])
-        audio, _ = librosa.load(filename, sr=sample_rate, mono=True)
+        # audio, _ = librosa.load(filename, sr=sample_rate, mono=True)
+        audio, _ = soundfile.read(filename)  # data, samplerate
+        wave_data = wave.open(filename, 'r')
         audio = audio.reshape(-1, 1)
-        yield audio, filename, category_id
+        yield audio, filename, category_id, wave_data.getnframes()
 
 
 def trim_silence(audio, threshold, frame_length=2048):
@@ -72,6 +76,12 @@ def trim_silence(audio, threshold, frame_length=2048):
     # Note: indices can be an empty array, if the whole audio was silence.
     return audio[indices[0]:indices[-1]] if indices.size else audio[0:0]
 
+
+def calculate_frame_length(audio_length, nframes):
+    if audio_length > nframes:
+        return int(np.round(audio_length / nframes))
+    else:
+        return 1
 
 def not_all_have_id(files):
     ''' Return true iff any of the filenames does not conform to the pattern
@@ -155,13 +165,14 @@ class AudioReader(object):
         # Go through the dataset multiple times
         while not stop:
             iterator = load_generic_audio(self.audio_dir, self.sample_rate)
-            for audio, filename, category_id in iterator:
+            for audio, filename, category_id, nframes in iterator:
                 if self.coord.should_stop():
                     stop = True
                     break
                 if self.silence_threshold is not None:
+                    frame_length = calculate_frame_length(len(audio), nframes)
                     # Remove silence
-                    audio = trim_silence(audio[:, 0], self.silence_threshold)
+                    audio = trim_silence(audio[:, 0], self.silence_threshold, frame_length)
                     audio = audio.reshape(-1, 1)
                     if audio.size == 0:
                         print("Warning: {} was ignored as it contains only "
