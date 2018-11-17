@@ -3,7 +3,6 @@ import os
 import random
 import re
 import threading
-import wave
 
 import librosa
 import numpy as np
@@ -42,12 +41,13 @@ def find_files(directory, pattern='*.wav'):
     return files
 
 
-def load_generic_audio(directory, sample_rate):
+def load_generic_audio(directory, sample_rate, max_samples):
     '''Generator that yields audio waveforms from the directory.'''
     files = find_files(directory)
     id_reg_exp = re.compile(FILE_PATTERN)
     print("files length: {}".format(len(files)))
     randomized_files = randomize_files(files)
+
     for filename in randomized_files:
         ids = id_reg_exp.findall(filename)
         if not ids:
@@ -57,11 +57,13 @@ def load_generic_audio(directory, sample_rate):
         else:
             # The file name matches the pattern for containing ids.
             category_id = int(ids[0][0])
+
         audio, _ = librosa.load(filename, sr=sample_rate, mono=True)  # data, samplerate
-        # audio, _ = soundfile.read(filename)  # other load wave sound
-        wave_data = wave.open(filename, 'r')
+        if max_samples > len(audio):
+            audio.resize(max_samples - 1, refcheck=False)
+
         audio = audio.reshape(-1, 1)
-        yield audio, filename, category_id, wave_data.getnframes()
+        yield audio, filename, category_id
 
 
 def trim_silence(audio, threshold, frame_length=2048):
@@ -75,12 +77,6 @@ def trim_silence(audio, threshold, frame_length=2048):
     # Note: indices can be an empty array, if the whole audio was silence.
     return audio[indices[0]:indices[-1]] if indices.size else audio[0:0]
 
-
-def calculate_frame_length(audio_length, nframes):
-    if audio_length > nframes:
-        return int(np.round(audio_length / nframes))
-    else:
-        return 1
 
 def not_all_have_id(files):
     ''' Return true iff any of the filenames does not conform to the pattern
@@ -103,6 +99,7 @@ class AudioReader(object):
                  sample_rate,
                  gc_enabled,
                  receptive_field,
+                 max_samples,
                  sample_size=None,
                  silence_threshold=None,
                  queue_size=32):
@@ -110,20 +107,18 @@ class AudioReader(object):
         self.sample_rate = sample_rate
         self.coord = coord
         self.sample_size = sample_size
+        self.max_samples = max_samples
         self.receptive_field = receptive_field
         self.silence_threshold = silence_threshold
         self.gc_enabled = gc_enabled
         self.threads = []
         self.sample_placeholder = tf.placeholder(dtype=tf.float32, shape=None)
-        self.queue = tf.PaddingFIFOQueue(queue_size,
-                                         ['float32'],
-                                         shapes=[(None, 1)])
+        self.queue = tf.PaddingFIFOQueue(queue_size, ['float32'], shapes=[(None, 1)])
         self.enqueue = self.queue.enqueue([self.sample_placeholder])
 
         if self.gc_enabled:
             self.id_placeholder = tf.placeholder(dtype=tf.int32, shape=())
-            self.gc_queue = tf.PaddingFIFOQueue(queue_size, ['int32'],
-                                                shapes=[()])
+            self.gc_queue = tf.PaddingFIFOQueue(queue_size, ['int32'], shapes=[()])
             self.gc_enqueue = self.gc_queue.enqueue([self.id_placeholder])
 
         # TODO Find a better way to check this.
@@ -163,15 +158,15 @@ class AudioReader(object):
         stop = False
         # Go through the dataset multiple times
         while not stop:
-            iterator = load_generic_audio(self.audio_dir, self.sample_rate)
-            for audio, filename, category_id, nframes in iterator:
+            iterator = load_generic_audio(self.audio_dir, self.sample_rate, self.max_samples)
+            # for audio, filename, category_id, nframes in iterator:
+            for audio, filename, category_id in iterator:
                 if self.coord.should_stop():
                     stop = True
                     break
                 if self.silence_threshold is not None:
-                    frame_length = calculate_frame_length(len(audio), nframes)
                     # Remove silence
-                    audio = trim_silence(audio[:, 0], self.silence_threshold, frame_length)
+                    audio = trim_silence(audio[:, 0], self.silence_threshold)
                     audio = audio.reshape(-1, 1)
                     if audio.size == 0:
                         print("Warning: {} was ignored as it contains only "
@@ -179,32 +174,21 @@ class AudioReader(object):
                               "threshold, or adjust volume of the audio."
                               .format(filename))
 
-                audio = np.pad(audio, [[self.receptive_field, 0], [0, 0]],
-                               'constant')
+                audio = np.pad(audio, [[self.receptive_field, 0], [0, 0]], 'constant')
 
                 if self.sample_size:
                     # Cut samples into pieces of size receptive_field +
                     # sample_size with receptive_field overlap
-                    if self.sample_size > len(audio):
-                        audio.resize((self.sample_size - 1, 1))
-                    else:
-                        self.sample_size = len(audio)
-
                     while len(audio) > self.receptive_field:
-                        piece = audio[:(self.receptive_field +
-                                        self.sample_size), :]
-                        sess.run(self.enqueue,
-                                 feed_dict={self.sample_placeholder: piece})
+                        piece = audio[:(self.receptive_field + self.sample_size), :]
+                        sess.run(self.enqueue, feed_dict={self.sample_placeholder: piece})
                         audio = audio[self.sample_size:, :]
                         if self.gc_enabled:
-                            sess.run(self.gc_enqueue, feed_dict={
-                                self.id_placeholder: category_id})
+                            sess.run(self.gc_enqueue, feed_dict={self.id_placeholder: category_id})
                 else:
-                    sess.run(self.enqueue,
-                             feed_dict={self.sample_placeholder: audio})
+                    sess.run(self.enqueue, feed_dict={self.sample_placeholder: audio})
                     if self.gc_enabled:
-                        sess.run(self.gc_enqueue,
-                                 feed_dict={self.id_placeholder: category_id})
+                        sess.run(self.gc_enqueue, feed_dict={self.id_placeholder: category_id})
 
     def start_threads(self, sess, n_threads=1):
         for _ in range(n_threads):

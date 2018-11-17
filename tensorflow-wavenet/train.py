@@ -14,10 +14,12 @@ import sys
 import time
 from datetime import datetime
 
+import librosa
 import tensorflow as tf
 from tensorflow.python.client import timeline
 
 from wavenet import WaveNetModel, AudioReader, optimizer_factory
+from wavenet.audio_reader import find_files
 
 BATCH_SIZE = 1
 DATA_DIRECTORY = './VCTK-Corpus'
@@ -27,7 +29,7 @@ NUM_STEPS = int(1e5)
 LEARNING_RATE = 1e-3
 WAVENET_PARAMS = './wavenet_params.json'
 STARTED_DATESTRING = "{0:%Y-%m-%dT%H-%M-%S}".format(datetime.now())
-SAMPLE_SIZE = None
+SAMPLE_SIZE = 100000
 L2_REGULARIZATION_STRENGTH = 0
 SILENCE_THRESHOLD = 0.1
 EPSILON = 0.001
@@ -185,6 +187,18 @@ def validate_directories(args):
     }
 
 
+def get_max_samples(directory, sample_rate, pattern='*.wav'):
+    files = find_files(directory)
+
+    max_len_audio = 0
+    for filename in files:
+        audio, _ = librosa.load(filename, sr=sample_rate, mono=True)  # data, samplerate
+        if max_len_audio < len(audio):
+            max_len_audio = len(audio)
+
+    return max_len_audio
+
+
 def main():
     args = get_arguments()
 
@@ -216,6 +230,7 @@ def main():
             coord,
             sample_rate=wavenet_params['sample_rate'],
             gc_enabled=gc_enabled,
+            max_samples=get_max_samples(args.data_dir, wavenet_params['sample_rate']),
             receptive_field=WaveNetModel.calculate_receptive_field(wavenet_params["filter_width"],
                                                                    wavenet_params["dilations"],
                                                                    wavenet_params["scalar_input"],
