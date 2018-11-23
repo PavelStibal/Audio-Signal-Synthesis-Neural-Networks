@@ -184,9 +184,6 @@ def main():
                            net.receptive_field)
         waveform = sess.run(seed).tolist()
     else:
-        # Silence with a single random sample at the end.
-        # waveform = [quantization_channels / 2] * (net.receptive_field - 1)  # rovna cara - 5200 samplu
-        # waveform.append(np.random.randint(quantization_channels))
         waveform = [.5]
 
     if args.fast_generation and args.wav_seed:
@@ -221,30 +218,9 @@ def main():
             outputs = [next_sample]
 
         # Run the WaveNet to predict the next sample.
-        prediction = sess.run(outputs, feed_dict={samples: window})[0] # probability with which the value in range 0.255 is taken
+        prediction = sess.run(outputs, feed_dict={samples: window})[0]
 
-        # Scale prediction distribution using temperature.
-        np.seterr(divide='ignore')
-        scaled_prediction = np.log(prediction) / args.temperature
-        scaled_prediction = (scaled_prediction -
-                             np.logaddexp.reduce(scaled_prediction))
-        scaled_prediction = np.exp(scaled_prediction)
-        np.seterr(divide='warn')
-
-        # Prediction distribution at temperature=1.0 should be unchanged after
-        # scaling.
-        if args.temperature == 1.0:
-            np.testing.assert_allclose(
-                    prediction, scaled_prediction, atol=1e-5,
-                    err_msg='Prediction scaling at temperature=1.0 '
-                            'is not working as intended.')
-
-        # sample1 = np.random.choice(np.arange(quantization_channels), p=scaled_prediction) # take random sample from 0-255 given a prediction probability
-        # sample = int(float(iter) / 15999.0 * 255.0)
-        # sample = int((np.sin(float(iter) / 15999.0 * np.pi * 2.0 * 4.0 - np.pi / 2.0) / 2.0 + 0.5) * 255)
         sample = np.argmax(prediction)
-        # sample = (sample1 + sample2) / 2
-        # iter = iter + 1
         waveform.append(sample) # append random sample to waveform
 
         # Show progress only once per second.

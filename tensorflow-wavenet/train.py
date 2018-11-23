@@ -34,7 +34,7 @@ L2_REGULARIZATION_STRENGTH = 0
 SILENCE_THRESHOLD = 0.1
 EPSILON = 0.001
 MOMENTUM = 0.9
-MAX_TO_KEEP = 500
+MAX_TO_KEEP = 100
 METADATA = False
 
 
@@ -267,11 +267,6 @@ def main():
     learning_rate_placeholder = tf.placeholder(tf.float32, [])
     optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate_placeholder, momentum=args.momentum)
     train_op = optimizer.minimize(loss)
-    # optimizer = optimizer_factory[args.optimizer](
-    #                 learning_rate=args.learning_rate,
-    #                 momentum=args.momentum)
-    # trainable = tf.trainable_variables()
-    # optim = optimizer.minimize(loss, var_list=trainable)
 
     # Set up logging for TensorBoard.
     writer = tf.summary.FileWriter(logdir)
@@ -319,7 +314,6 @@ def main():
                 run_options = tf.RunOptions(
                     trace_level=tf.RunOptions.FULL_TRACE)
                 summary, loss_value, _ = sess.run(
-                    # [summaries, loss, optim],
                     [summaries, loss, train_op],
                     feed_dict={learning_rate_placeholder: learning_rate},
                     options=run_options,
@@ -333,7 +327,6 @@ def main():
             else:
                 summary, loss_value, _ = sess.run([summaries, loss, train_op],
                                                   feed_dict={learning_rate_placeholder: learning_rate})
-                # summary, loss_value, _ = sess.run([summaries, loss, optim])
                 writer.add_summary(summary, step)
 
             if 1.5 >= loss_value > 0.5 and update == 0:
