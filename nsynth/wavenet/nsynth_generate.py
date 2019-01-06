@@ -357,7 +357,7 @@ def main(unused_argv=None):
             audio = crossfade_audio(audio1, audio2, num_type)
             save_name += 'crossfade.wav'
 
-        soundfile.write('mix.wav', audio, sample_rate1)
+        soundfile.write(save_name, audio, sample_rate1)
         print("save audio")
 
     # save synthesis of encoding sound
